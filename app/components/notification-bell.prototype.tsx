@@ -310,7 +310,18 @@ export function VariantASidebarBell({ store }: { store: Store }) {
 // drawer beside the sidebar, grouped Today / Earlier, Unread/All tabs, per-row
 // read/unread toggle on hover. Read rows stay in "All".
 
-export function VariantBNavDrawer({ store }: { store: Store }) {
+// D = A's sidebar bell opening B's full drawer.
+// E = A's sidebar bell + dropdown, with B's Unread/All tabs, grouping and
+//     per-row read toggle inside the dropdown.
+export function VariantBNavDrawer({
+  store,
+  trigger = "nav",
+  shape = "drawer",
+}: {
+  store: Store;
+  trigger?: "nav" | "bell";
+  shape?: "drawer" | "popover";
+}) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"unread" | "all">("unread");
   const ref = useRef<HTMLDivElement>(null);
@@ -358,7 +369,20 @@ export function VariantBNavDrawer({ store }: { store: Store }) {
     );
 
   return (
-    <div ref={ref}>
+    <div ref={ref} className={cn(shape === "popover" && "relative")}>
+      {trigger === "bell" ? (
+        <button
+          onClick={() => setOpen((o) => !o)}
+          title="Notifications"
+          className={cn(
+            "relative rounded-md p-1.5 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            open && "bg-sidebar-accent text-sidebar-accent-foreground"
+          )}
+        >
+          <Bell className="size-5" />
+          <Badge count={store.unread} className="absolute -right-1.5 -top-1" />
+        </button>
+      ) : (
       <button
         onClick={() => setOpen((o) => !o)}
         className={cn(
@@ -372,8 +396,16 @@ export function VariantBNavDrawer({ store }: { store: Store }) {
         Notifications
         <Badge count={store.unread} className="ml-auto" />
       </button>
+      )}
       {open && (
-        <div className="fixed bottom-0 left-56 top-0 z-40 flex w-[26rem] flex-col border-r bg-background shadow-2xl">
+        <div
+          className={cn(
+            "z-40 flex flex-col bg-background text-foreground",
+            shape === "drawer"
+              ? "fixed bottom-0 left-56 top-0 w-[26rem] border-r shadow-2xl"
+              : "absolute left-full top-0 ml-3 max-h-[32rem] w-96 rounded-lg border shadow-xl"
+          )}
+        >
           <div className="flex h-14 items-center justify-between border-b px-5">
             <span className="font-semibold">Notifications</span>
             <div className="flex items-center gap-2">
@@ -563,6 +595,8 @@ export const VARIANTS = [
   { key: "A", name: "Sidebar bell + popover" },
   { key: "B", name: "Nav item + drawer" },
   { key: "C", name: "Top bar + inbox page" },
+  { key: "D", name: "A's bell → B's drawer" },
+  { key: "E", name: "A's dropdown with B's tabs" },
 ] as const;
 export type VariantKey = (typeof VARIANTS)[number]["key"];
 

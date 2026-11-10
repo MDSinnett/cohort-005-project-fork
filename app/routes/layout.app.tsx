@@ -252,7 +252,13 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
         recentCourses={recentCourses}
         isTeamAdmin={userIsTeamAdmin}
         headerSlot={
-          signedIn && variant === "A" ? <VariantASidebarBell store={store} /> : null
+          !signedIn ? null : variant === "A" ? (
+            <VariantASidebarBell store={store} />
+          ) : variant === "D" ? (
+            <VariantBNavDrawer store={store} trigger="bell" shape="drawer" />
+          ) : variant === "E" ? (
+            <VariantBNavDrawer store={store} trigger="bell" shape="popover" />
+          ) : null
         }
         navSlot={
           signedIn && variant === "B" ? <VariantBNavDrawer store={store} /> : null
