@@ -3,6 +3,15 @@ import type { Route } from "./+types/layout.app";
 import { Sidebar } from "~/components/sidebar";
 import { DevUI } from "~/components/dev-ui";
 import { Toaster } from "sonner";
+import {
+  useProtoNotifications,
+  usePrototypeVariant,
+  PrototypeSwitcher,
+  VariantASidebarBell,
+  VariantBNavDrawer,
+  VariantCTopBar,
+  announceArrival,
+} from "~/components/notification-bell.prototype";
 import { getCurrentUserId, getDevCountry } from "~/lib/session";
 import { getCountryTierInfo, COUNTRIES } from "~/lib/ppp";
 import { eq, and, or, sql, desc } from "drizzle-orm";
@@ -227,14 +236,30 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
     isTeamAdmin: userIsTeamAdmin,
   } = loaderData;
 
+  // PROTOTYPE: notification bell variants (see notification-bell.prototype.tsx)
+  const { variant, empty } = usePrototypeVariant();
+  const store = useProtoNotifications(
+    currentUser?.role ?? null,
+    userIsTeamAdmin,
+    empty
+  );
+  const signedIn = !!currentUser;
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar
         currentUser={currentUser}
         recentCourses={recentCourses}
         isTeamAdmin={userIsTeamAdmin}
+        headerSlot={
+          signedIn && variant === "A" ? <VariantASidebarBell store={store} /> : null
+        }
+        navSlot={
+          signedIn && variant === "B" ? <VariantBNavDrawer store={store} /> : null
+        }
       />
       <main className="flex-1 overflow-y-auto">
+        {signedIn && variant === "C" && <VariantCTopBar store={store} />}
         <Outlet />
       </main>
       <DevUI
@@ -245,6 +270,11 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
         countries={countries}
       />
       <Toaster position="bottom-right" richColors closeButton />
+      {signedIn && (
+        <PrototypeSwitcher
+          onArrive={() => announceArrival(variant, store.arrive())}
+        />
+      )}
     </div>
   );
 }
